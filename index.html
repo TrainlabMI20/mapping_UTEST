@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAPPING UTEST RPI</title>
-	<link rel="icon" href="Alstom_logo_trainlab_RPI.png" type="png"/>
+    <link rel="icon" href="Alstom_logo_trainlab_RPI.png" type="png"/>
     <style>
         body {
             font-family: Alstom, sans-serif;
             margin: 40px;
-			background-color: #767676  ; /* Bleu Alstom */
+            background-color: #767676; /* Bleu Alstom */
             color: white; /* Texte en blanc pour un meilleur contraste */
         }
         .container {
@@ -34,6 +34,7 @@
             border: none;
             cursor: pointer;
             border-radius: 5px;
+            margin-right: 10px;
         }
         .result {
             margin-top: 20px;
@@ -42,7 +43,7 @@
             background-color: #767676;
             border-radius: 5px;
         }
-		 .gif-container {
+        .gif-container {
             text-align: center;
             margin-top: 20px;
         }
@@ -50,10 +51,9 @@
             max-width: 100%;
             height: auto;
         }
-		 .image-container {
+        .image-container {
             text-align: center;
             margin-top: 20px;
-			
         }
     </style>
 </head>
@@ -70,18 +70,17 @@
                 <input type="file" id="cfgFile" name="cfgFile" accept=".cfg" required>
             </div>
             <button type="button" class="btn" onclick="importAndUpdateFiles()">Importer et télécharger CFG et Requete.txt</button>
+            <button type="button" class="btn" onclick="generateAndDownloadXML()">Conf WAGO XML</button>
         </form>
         <div class="result" id="resultSection">
             <!-- Ici s'affichera le résultat de l'importation -->
         </div>
-		
-		<div class="gif-container">
+        <div class="gif-container">
             <img src="image007.gif" alt="TGV en mouvement">
         </div>
-		
-		<div class="image-container">
-        <img src="Alstom_logo_trainlab_RPI.png" alt="Image Alstom" style="width: 600px; height: 200px;">
-    </div>
+        <div class="image-container">
+            <img src="Alstom_logo_trainlab_RPI.png" alt="Image Alstom" style="width: 600px; height: 200px;">
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
@@ -121,8 +120,6 @@
                                 if (cellB && cellF && cellG && cellB.v === "X") {
                                     var cfgLine = `  <variables name="${cellG.v}" type="INTEGER" root="${cellF.v}"/>`;
                                     updatedLinesCFG.push(cfgLine);
-
-                                   
                                 }
                             }
                             break;
@@ -133,7 +130,7 @@
                             for (var i = range.s.r + 2; i <= range.e.r; i++) {
                                 var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
                                 var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-								var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
+                                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
                                 var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
 
                                 if (cellB && cellC && cellG && cellB.v === "Simulatio") {
@@ -150,7 +147,7 @@
                             for (var i = range.s.r + 2; i <= range.e.r; i++) {
                                 var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
                                 var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-								var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
+                                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
                                 var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F
                                 var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
 
@@ -197,16 +194,83 @@
                     downloadFile(newCFGContent, "Memory-variables.cfg");
 
                     // Générer et télécharger le fichier Requete.txt
-                    var requeteContent = updatedLinesRequete.join("");
+                    var requeteContent = updatedLinesRequete.join("\n");
                     downloadFile(requeteContent, "Requete.txt");
 
                     // Afficher le résultat dans la section dédiée
                     var resultSection = document.getElementById('resultSection');
-                    resultSection.innerHTML = "<p>Le fichier Excel xlsm a été importé, le fichier Memory-variables.cfg a été modifié avec succès et le fichier Requete.txt a été généré et téléchargé.</p><pre>";
+                    resultSection.innerHTML = "<p>Le fichier Excel xlsm a été importé, le fichier Memory-variables.cfg a été modifié avec succès, et le fichier Requete.txt a été généré et téléchargé.</p>";
                 };
                 cfgReader.readAsText(cfgFile);
             };
             excelReader.readAsArrayBuffer(excelFile);
+        }
+
+        function generateAndDownloadXML() {
+            var excelFileInput = document.getElementById('excelFile');
+
+            if (!excelFileInput.files.length) {
+                alert("Veuillez sélectionner un fichier Excel xlsm.");
+                return;
+            }
+
+            var excelFile = excelFileInput.files[0];
+
+            var excelReader = new FileReader();
+            excelReader.onload = function(e) {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array', bookVBA: true });
+
+                var xmlContent = "";
+                workbook.SheetNames.forEach(function(sheetName) {
+                    if (sheetName === "Wago_mapping") {
+                        var sheet = workbook.Sheets[sheetName];
+                        var range = XLSX.utils.decode_range(sheet['!ref']);
+                        xmlContent = generateXML(sheet, range);
+                    }
+                });
+
+                // Télécharger le fichier XML généré
+                downloadFile(xmlContent, "Wago_mapping.xml");
+
+                // Afficher le résultat dans la section dédiée
+                var resultSection = document.getElementById('resultSection');
+                resultSection.innerHTML = "<p>Le fichier XML WAGO a été généré et téléchargé avec succès.</p>";
+            };
+            excelReader.readAsArrayBuffer(excelFile);
+        }
+
+        function generateXML(sheet, range) {
+            var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<Configuration>\n';
+
+            for (var i = range.s.r + 1; i <= range.e.r; i++) {
+                var cellA = sheet[XLSX.utils.encode_cell({ r: i, c: 0 })]; // Colonne A
+                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
+                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
+                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
+                var cellE = sheet[XLSX.utils.encode_cell({ r: i, c: 4 })]; // Colonne E
+
+                if (cellA && cellB && cellC && cellD && cellE) {
+                    if (i === range.s.r + 1) { // Première ligne après l'en-tête, récupérer l'adresse IP
+                        xml += `<adresseIP IP="${cellA.v}"/>\n`;
+                        xml += `    <DigitalInputs>\n`;
+                    }
+
+                    xml += `        <Input name="${cellB.v}" channel="${cellC.v}"/>\n`;
+
+                    if (cellD && cellE) { // Si des sorties numériques sont également présentes
+                        if (i === range.s.r + 1) { // Première ligne après l'en-tête pour les sorties
+                            xml += `    </DigitalInputs>\n`;
+                            xml += `    <DigitalOutputs>\n`;
+                        }
+                        xml += `        <Output name="${cellD.v}" channel="${cellE.v}"/>\n`;
+                    }
+                }
+            }
+
+            xml += `    </DigitalOutputs>\n`;
+            xml += '</Configuration>';
+            return xml;
         }
 
         function downloadFile(content, fileName) {
