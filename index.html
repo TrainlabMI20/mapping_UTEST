@@ -206,7 +206,7 @@
             excelReader.readAsArrayBuffer(excelFile);
         }
 
-        function generateAndDownloadXML() {
+ function generateAndDownloadXML() {
             var excelFileInput = document.getElementById('excelFile');
 
             if (!excelFileInput.files.length) {
@@ -243,32 +243,37 @@
         function generateXML(sheet, range) {
             var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<Configuration>\n';
 
+            var inDigitalInputs = false; // Pour suivre si nous sommes dans la section DigitalInputs
+            var inDigitalOutputs = false; // Pour suivre si nous sommes dans la section DigitalOutputs
+
+
+
+ // Parcours de la section Digital Inputs
+            xml += '    <DigitalInputs>\n';
             for (var i = range.s.r + 1; i <= range.e.r; i++) {
-                var cellA = sheet[XLSX.utils.encode_cell({ r: i, c: 0 })]; // Colonne A
-                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
-                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
-                var cellE = sheet[XLSX.utils.encode_cell({ r: i, c: 4 })]; // Colonne E
-
-                if (cellA && cellB && cellC && cellD && cellE) {
-                    if (i === range.s.r + 1) { // Première ligne après l'en-tête, récupérer l'adresse IP
-                        xml += `<adresseIP IP="${cellA.v}"/>\n`;
-                        xml += `    <DigitalInputs>\n`;
-                    }
-
-                    xml += `        <Input name="${cellB.v}" channel="${cellC.v}"/>\n`;
-
-                    if (cellD && cellE) { // Si des sorties numériques sont également présentes
-                        if (i === range.s.r + 1) { // Première ligne après l'en-tête pour les sorties
-                            xml += `    </DigitalInputs>\n`;
-                            xml += `    <DigitalOutputs>\n`;
-                        }
-                        xml += `        <Output name="${cellD.v}" channel="${cellE.v}"/>\n`;
-                    }
+                var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G (Digital Input)
+                var cellE = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F (Channel)
+                if (cellF && cellE) {
+                    xml += `        <Input name="${cellF.v}" channel="${cellE.v}"/>\n`;
                 }
             }
+            xml += '    </DigitalInputs>\n';
 
-            xml += `    </DigitalOutputs>\n`;
+			
+			
+            // Parcours de la section Digital Outputs
+            xml += '    <DigitalOutputs>\n';
+            for (var i = range.s.r + 1; i <= range.e.r; i++) {
+                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne B (Digital Output)
+				 var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B (Digital Output)
+                if (cellB && cellC) {
+                    xml += `        <Output name="${cellB.v}" channel="${cellC.v}"/>\n`;
+                }
+            }
+            xml += '    </DigitalOutputs>\n';
+
+           
+
             xml += '</Configuration>';
             return xml;
         }
