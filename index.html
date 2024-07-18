@@ -138,7 +138,7 @@
                                     updatedLinesCFG.push(cfgLine);
 
                                     var requeteLine = `${cellC.v};${cellB.v}/${cellC.v};0;INT;${cellD.v}%`;
-                                    updatedLinesRequete.push(requeteLine);
+                                    updatedLinesRequete.push(requeteLine); 
                                 }
                             }
                             break;
@@ -155,7 +155,7 @@
                                     var cfgLine = `<variables name="${cellC.v}" type="INTEGER" root="${cellB.v}" alias="${cellF.v}${cellG.v}"/>`;
                                     updatedLinesCFG.push(cfgLine);
 
-                                    var requeteLine = `${cellC.v};${cellB.v}/${cellC.v};0;INT;${cellD.v}%`;
+                                    var requeteLine = `${cellC.v};${cellB.v}/${cellC.v};0;INT;${cellD.v}%`; 
                                     updatedLinesRequete.push(requeteLine);
                                 }
                             }
@@ -195,6 +195,7 @@
 
                     // Générer et télécharger le fichier Requete.txt
                     var requeteContent = updatedLinesRequete.join("\n");
+                    requeteContent = requeteContent.replace(/\r?\n|\r/g, ''); // Supprimer les LFCR
                     downloadFile(requeteContent, "Requete.txt");
 
                     // Afficher le résultat dans la section dédiée
@@ -206,7 +207,7 @@
             excelReader.readAsArrayBuffer(excelFile);
         }
 
- function generateAndDownloadXML() {
+        function generateAndDownloadXML() {
             var excelFileInput = document.getElementById('excelFile');
 
             if (!excelFileInput.files.length) {
@@ -246,9 +247,7 @@
             var inDigitalInputs = false; // Pour suivre si nous sommes dans la section DigitalInputs
             var inDigitalOutputs = false; // Pour suivre si nous sommes dans la section DigitalOutputs
 
-
-
- // Parcours de la section Digital Inputs
+            // Parcours de la section Digital Inputs
             xml += '    <DigitalInputs>\n';
             for (var i = range.s.r + 1; i <= range.e.r; i++) {
                 var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G (Digital Input)
@@ -259,20 +258,16 @@
             }
             xml += '    </DigitalInputs>\n';
 
-			
-			
             // Parcours de la section Digital Outputs
             xml += '    <DigitalOutputs>\n';
             for (var i = range.s.r + 1; i <= range.e.r; i++) {
                 var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne B (Digital Output)
-				 var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B (Digital Output)
+                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B (Digital Output)
                 if (cellB && cellC) {
                     xml += `        <Output name="${cellB.v}" channel="${cellC.v}"/>\n`;
                 }
             }
             xml += '    </DigitalOutputs>\n';
-
-           
 
             xml += '</Configuration>';
             return xml;
