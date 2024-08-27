@@ -114,12 +114,17 @@
                         case "Liaisons WUM":
                             for (var i = range.s.r + 2; i <= range.e.r; i++) {
                                 var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
+								var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
+								var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
                                 var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F
                                 var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
 
                                 if (cellB && cellF && cellG && cellB.v === "X") {
                                     var cfgLine = `  <variables name="${cellG.v}" type="INTEGER" root="${cellF.v}"/>`;
                                     updatedLinesCFG.push(cfgLine);
+									
+									var requeteLine = `${cellC.v};${cellF.v}/${cellG.v};0;INT;${cellD.v}%`; 
+                                    updatedLinesRequete.push(requeteLine);
                                 }
                             }
                             break;
