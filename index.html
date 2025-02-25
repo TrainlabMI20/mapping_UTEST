@@ -1,294 +1,81 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAPPING UTEST RPI</title>
-    <link rel="icon" href="Alstom_logo_trainlab_RPI.png" type="png"/>
-    <style>
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Système Train</title><style>
         body {
-            font-family: Alstom, sans-serif;
-            margin: 40px;
-            background-color: #767676; /* Bleu Alstom */
-            color: white; /* Texte en blanc pour un meilleur contraste */
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #fff;
-            border-radius: 5px;
-            background-color: #141313;
-        }
-        h2 {
-            text-align: center;
+        .sidebar {
+            width: 200px;
+            background-color: #333;
             color: white;
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .btn {
-            background-color: #3AF926;
+        .sidebar button {
+            background-color: #555;
             color: white;
-            padding: 10px 20px;
             border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        .result {
-            margin-top: 20px;
-            border: 1px solid #ddd;
             padding: 10px;
-            background-color: #767676;
-            border-radius: 5px;
+            margin: 10px 0;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 25px; /* Arrondir les coins du bouton */
+            transition: background-color 0.3s; /* Animation de transition pour le hover */
         }
-        .gif-container {
+        .sidebar button:hover {
+            background-color: #777;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .train-view {
             text-align: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            background-color: #fff;
             margin-top: 20px;
         }
-        .gif-container img {
-            max-width: 100%;
-            height: auto;
+        .led {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 5px;
         }
-        .image-container {
-            text-align: center;
-            margin-top: 20px;
+        .led.on {
+            background-color: green;
         }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>MAPPING UTEST RPI</h2>
-        <form id="uploadForm" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="excelFile">Sélectionnez le fichier Excel xlsm :</label>
-                <input type="file" id="excelFile" name="excelFile" accept=".xlsm" required>
-            </div>
-            <div class="form-group">
-                <label for="cfgFile">Sélectionnez le fichier CFG à modifier :</label>
-                <input type="file" id="cfgFile" name="cfgFile" accept=".cfg" required>
-            </div>
-            <button type="button" class="btn" onclick="importAndUpdateFiles()">Importer et télécharger CFG et Requete.txt</button>
-            <button type="button" class="btn" onclick="generateAndDownloadXML()">Conf WAGO XML</button>
-        </form>
-        <div class="result" id="resultSection">
-            <!-- Ici s'affichera le résultat de l'importation -->
-        </div>
-        <div class="gif-container">
-            <img src="image007.gif" alt="TGV en mouvement">
-        </div>
-        <div class="image-container">
-            <img src="Alstom_logo_trainlab_RPI.png" alt="Image Alstom" style="width: 600px; height: 200px;">
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
-    <script>
-        function importAndUpdateFiles() {
-            var excelFileInput = document.getElementById('excelFile');
-            var cfgFileInput = document.getElementById('cfgFile');
-
-            if (!excelFileInput.files.length || !cfgFileInput.files.length) {
-                alert("Veuillez sélectionner à la fois un fichier Excel xlsm et un fichier CFG à modifier.");
-                return;
+        .led.off {
+            background-color: red;
+        }
+    </style></head><body><div class="sidebar"><h2>Système Train</h2><button onclick="showView('view_train')">Vue Globale</button><button onclick="showView('view_doors')">Portes</button><button onclick="showView('view_pantograph')">Pantographe</button><button onclick="showView('view_compressor')">Compresseur</button><button onclick="showView('view_mos')">MIOS</button></div><div class="content"><div id="train-view" class="train-view"><h3>Vue Globale du Train</h3><p>Représentation du train de côté avec portes, pantographe, compresseur.</p><img src="https://via.placeholder.com/300x100?text=Train+Vue" alt="Train" /><div id="leds" style="display: none;"><h4>État des LEDs du MOS</h4><div class="led on"></div><div class="led off"></div><div class="led on"></div><div class="led off"></div><div class="led on"></div></div></div></div><script>
+        function showView(view) {
+            const trainView = document.getElementById('train-view');
+            const leds = document.getElementById('leds');
+            switch(view) {
+                case 'view_train':
+                    trainView.innerHTML = `<h3>Vue Globale du Train</h3><p>Représentation du train de côté avec portes, pantographe, compresseur.</p><img src="https://via.placeholder.com/300x100?text=Train+Vue" alt="Train" />`;
+                    leds.style.display = 'none';
+                    break;
+                case 'view_doors':
+                    trainView.innerHTML = `<h3>Portes</h3><p>État des portes du train.</p>`;
+                    leds.style.display = 'none';
+                    break;
+                case 'view_pantograph':
+                    trainView.innerHTML = `<h3>Pantographe</h3><p>État du pantographe du train.</p>`;
+                    leds.style.display = 'none';
+                    break;
+                case 'view_compressor':
+                    trainView.innerHTML = `<h3>Compresseur</h3><p>État du compresseur du train.</p>`;
+                    leds.style.display = 'none';
+                    break;
+                case 'view_mos':
+                    trainView.innerHTML = `<h3>MIOS</h3><p>État des LEDs du MOS.</p>`;
+                    leds.style.display = 'block';
+                    break;
             }
-
-            var excelFile = excelFileInput.files[0];
-            var cfgFile = cfgFileInput.files[0];
-
-            var excelReader = new FileReader();
-            excelReader.onload = function(e) {
-                var data = new Uint8Array(e.target.result);
-                var workbook = XLSX.read(data, { type: 'array', bookVBA: true }); // bookVBA: true pour xlsm
-
-                var updatedLinesCFG = [];
-                var updatedLinesRequete = [];
-
-                // Parcourir chaque feuille de calcul dans le classeur Excel
-                workbook.SheetNames.forEach(function(sheetName) {
-                    var sheet = workbook.Sheets[sheetName];
-                    var range = XLSX.utils.decode_range(sheet['!ref']);
-
-                    switch (sheetName) {
-                        case "Liaisons WUM":
-                            for (var i = range.s.r + 2; i <= range.e.r; i++) {
-                                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
-								var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-								var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
-                                var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F
-                                var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
-
-                                if (cellB && cellF && cellG && cellB.v === "X") {
-                                    var cfgLine = `  <variables name="${cellG.v}" type="INTEGER" root="${cellF.v}"/>`;
-                                    updatedLinesCFG.push(cfgLine);
-									
-									var requeteLine = `${cellC.v};${cellF.v}/${cellG.v};0;INT;${cellD.v}%`; 
-                                    updatedLinesRequete.push(requeteLine);
-                                }
-                            }
-                            break;
-                        
-                        case "Liaisons Hardware DO":
-                        case "Liaisons Hardware DI":
-                        case "Liaisons Modèles Freins":
-                            for (var i = range.s.r + 2; i <= range.e.r; i++) {
-                                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
-                                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-                                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
-                                var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
-
-                                if (cellB && cellC && cellG && cellB.v === "Simulatio") {
-                                    var cfgLine = `<variables name="${cellC.v}" type="INTEGER" root="${cellB.v}" alias="${cellG.v}"/>`;
-                                    updatedLinesCFG.push(cfgLine);
-
-                                    var requeteLine = `${cellC.v};${cellB.v}/${cellC.v};0;INT;${cellD.v}%`;
-                                    updatedLinesRequete.push(requeteLine); 
-                                }
-                            }
-                            break;
-
-                        case "Liaisons Modèle Traction":
-                            for (var i = range.s.r + 2; i <= range.e.r; i++) {
-                                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B
-                                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne C
-                                var cellD = sheet[XLSX.utils.encode_cell({ r: i, c: 3 })]; // Colonne D
-                                var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F
-                                var cellG = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G
-
-                                if (cellB && cellC && cellF && cellG && cellB.v === "Simulatio") {
-                                    var cfgLine = `<variables name="${cellC.v}" type="INTEGER" root="${cellB.v}" alias="${cellF.v}${cellG.v}"/>`;
-                                    updatedLinesCFG.push(cfgLine);
-
-                                    var requeteLine = `${cellC.v};${cellB.v}/${cellC.v};0;INT;${cellD.v}%`; 
-                                    updatedLinesRequete.push(requeteLine);
-                                }
-                            }
-                            break;
-
-                        default:
-                            // Autres cas de feuilles à ignorer
-                            break;
-                    }
-                });
-
-                // Lire le fichier CFG et récupérer les lignes existantes avec root="CIP"
-                var cfgReader = new FileReader();
-                cfgReader.onload = function(e) {
-                    var cfgContent = e.target.result;
-                    var existingLines = [];
-
-                    // Récupérer les lignes avec root="CIP"
-                    var lines = cfgContent.split('\n');
-                    lines.forEach(function(line) {
-                        if (line.includes('root="CIP"')) {
-                            existingLines.push(line.trim());
-                        }
-                    });
-
-                    // Mettre à jour les lignes existantes dans le fichier CFG
-                    updatedLinesCFG = existingLines.concat(updatedLinesCFG);
-
-                    // Générer le contenu complet du fichier CFG
-                    var newCFGContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-                    newCFGContent += `<memoryvariable:MemoryVariableList xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:memoryvariable="http://com.spherea.utest.mmi/configuration/memoryvariable">\n`;
-                    newCFGContent += updatedLinesCFG.join("\n") + "\n";
-                    newCFGContent += `</memoryvariable:MemoryVariableList>`;
-
-                    // Télécharger le fichier CFG modifié
-                    downloadFile(newCFGContent, "Memory-variables.cfg");
-
-                    // Générer et télécharger le fichier Requete.txt
-                    var requeteContent = updatedLinesRequete.join("\n");
-                    requeteContent = requeteContent.replace(/\r?\n|\r/g, ''); // Supprimer les LFCR
-                    downloadFile(requeteContent, "Requete.txt");
-
-                    // Afficher le résultat dans la section dédiée
-                    var resultSection = document.getElementById('resultSection');
-                    resultSection.innerHTML = "<p>Le fichier Excel xlsm a été importé, le fichier Memory-variables.cfg a été modifié avec succès, et le fichier Requete.txt a été généré et téléchargé.</p>";
-                };
-                cfgReader.readAsText(cfgFile);
-            };
-            excelReader.readAsArrayBuffer(excelFile);
         }
-
-        function generateAndDownloadXML() {
-            var excelFileInput = document.getElementById('excelFile');
-
-            if (!excelFileInput.files.length) {
-                alert("Veuillez sélectionner un fichier Excel xlsm.");
-                return;
-            }
-
-            var excelFile = excelFileInput.files[0];
-
-            var excelReader = new FileReader();
-            excelReader.onload = function(e) {
-                var data = new Uint8Array(e.target.result);
-                var workbook = XLSX.read(data, { type: 'array', bookVBA: true });
-
-                var xmlContent = "";
-                workbook.SheetNames.forEach(function(sheetName) {
-                    if (sheetName === "Wago_mapping") {
-                        var sheet = workbook.Sheets[sheetName];
-                        var range = XLSX.utils.decode_range(sheet['!ref']);
-                        xmlContent = generateXML(sheet, range);
-                    }
-                });
-
-                // Télécharger le fichier XML généré
-                downloadFile(xmlContent, "Wago_mapping.xml");
-
-                // Afficher le résultat dans la section dédiée
-                var resultSection = document.getElementById('resultSection');
-                resultSection.innerHTML = "<p>Le fichier XML WAGO a été généré et téléchargé avec succès.</p>";
-            };
-            excelReader.readAsArrayBuffer(excelFile);
-        }
-
-        function generateXML(sheet, range) {
-            var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<Configuration>\n';
-
-            var inDigitalInputs = false; // Pour suivre si nous sommes dans la section DigitalInputs
-            var inDigitalOutputs = false; // Pour suivre si nous sommes dans la section DigitalOutputs
-
-            // Parcours de la section Digital Inputs
-            xml += '    <DigitalInputs>\n';
-            for (var i = range.s.r + 1; i <= range.e.r; i++) {
-                var cellF = sheet[XLSX.utils.encode_cell({ r: i, c: 6 })]; // Colonne G (Digital Input)
-                var cellE = sheet[XLSX.utils.encode_cell({ r: i, c: 5 })]; // Colonne F (Channel)
-                if (cellF && cellE) {
-                    xml += `        <Input name="${cellF.v}" channel="${cellE.v}"/>\n`;
-                }
-            }
-            xml += '    </DigitalInputs>\n';
-
-            // Parcours de la section Digital Outputs
-            xml += '    <DigitalOutputs>\n';
-            for (var i = range.s.r + 1; i <= range.e.r; i++) {
-                var cellB = sheet[XLSX.utils.encode_cell({ r: i, c: 2 })]; // Colonne B (Digital Output)
-                var cellC = sheet[XLSX.utils.encode_cell({ r: i, c: 1 })]; // Colonne B (Digital Output)
-                if (cellB && cellC) {
-                    xml += `        <Output name="${cellB.v}" channel="${cellC.v}"/>\n`;
-                }
-            }
-            xml += '    </DigitalOutputs>\n';
-
-            xml += '</Configuration>';
-            return xml;
-        }
-
-        function downloadFile(content, fileName) {
-            var blob = new Blob([content], { type: "text/plain" });
-            var url = window.URL.createObjectURL(blob);
-            var a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-    </script>
-</body>
-</html>
+    </script></body></html>
